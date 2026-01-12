@@ -1,0 +1,35 @@
+{
+  "name": "x-post-mcp",
+  "version": "1.0.0",
+  "description": "MCP server for posting tweets via X API v2",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "x-post-mcp": "dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "prepublishOnly": "pnpm build"
+  },
+  "keywords": [
+    "mcp",
+    "twitter",
+    "x",
+    "ai",
+    "agent"
+  ],
+  "author": "",
+  "license": "MIT",
+  "packageManager": "pnpm@10.26.2",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.0",
+    "@types/node": "^22.0.0"
+  }
+}
