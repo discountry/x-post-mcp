@@ -30,7 +30,9 @@ Parameters:
 
 ### Authentication
 
-Bearer token passed via `X_BEARER_TOKEN` environment variable at MCP installation:
+Two authentication modes supported:
+
+#### Option 1: Bearer Token (manual refresh required)
 
 ```json
 {
@@ -39,12 +41,38 @@ Bearer token passed via `X_BEARER_TOKEN` environment variable at MCP installatio
       "command": "npx",
       "args": ["x-post-mcp"],
       "env": {
-        "X_BEARER_TOKEN": "<token>"
+        "X_BEARER_TOKEN": "<user_access_token>"
       }
     }
   }
 }
 ```
+
+#### Option 2: Auto-refresh (recommended)
+
+Configure OAuth 2.0 credentials for automatic token refresh:
+
+```json
+{
+  "mcpServers": {
+    "x-post-mcp": {
+      "command": "npx",
+      "args": ["x-post-mcp"],
+      "env": {
+        "X_CLIENT_ID": "<client_id>",
+        "X_CLIENT_SECRET": "<client_secret>",
+        "X_REFRESH_TOKEN": "<refresh_token>"
+      }
+    }
+  }
+}
+```
+
+Environment variables:
+- `X_BEARER_TOKEN`: User access token (expires in 2 hours)
+- `X_CLIENT_ID`: OAuth 2.0 Client ID from X Developer Portal
+- `X_CLIENT_SECRET`: OAuth 2.0 Client Secret
+- `X_REFRESH_TOKEN`: Refresh token obtained during OAuth flow (requires `offline.access` scope)
 
 ## X API Reference
 

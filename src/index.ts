@@ -3,6 +3,11 @@
 import * as readline from "node:readline";
 
 const X_API_URL = "https://api.x.com/2/tweets";
+const X_TOKEN_URL = "https://api.x.com/2/oauth2/token";
+
+// Token state (will be refreshed automatically)
+let currentAccessToken = process.env.X_BEARER_TOKEN || "";
+let tokenExpiresAt = 0;
 
 interface JsonRpcRequest {
   jsonrpc: "2.0";
@@ -28,6 +33,68 @@ function sendError(
   message: string
 ): void {
   send({ jsonrpc: "2.0", id, error: { code, message } });
+}
+
+async function refreshAccessToken(): Promise<boolean> {
+  const clientId = process.env.X_CLIENT_ID;
+  const clientSecret = process.env.X_CLIENT_SECRET;
+  const refreshToken = process.env.X_REFRESH_TOKEN;
+
+  if (!clientId || !clientSecret || !refreshToken) {
+    return false;
+  }
+
+  const auth = Buffer.from(`${clientId}:${clientSecret}`).toString("base64");
+
+  try {
+    const response = await fetch(X_TOKEN_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        Authorization: `Basic ${auth}`,
+      },
+      body: new URLSearchParams({
+        grant_type: "refresh_token",
+        refresh_token: refreshToken,
+      }),
+    });
+
+    if (!response.ok) {
+      return false;
+    }
+
+    const data = (await response.json()) as {
+      access_token: string;
+      expires_in: number;
+    };
+
+    currentAccessToken = data.access_token;
+    // Set expiry 5 minutes before actual expiry to be safe
+    tokenExpiresAt = Date.now() + (data.expires_in - 300) * 1000;
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function getValidToken(): Promise<string | null> {
+  // If we have a valid token that hasn't expired, use it
+  if (currentAccessToken && tokenExpiresAt > Date.now()) {
+    return currentAccessToken;
+  }
+
+  // Try to refresh the token
+  const refreshed = await refreshAccessToken();
+  if (refreshed) {
+    return currentAccessToken;
+  }
+
+  // Fall back to the original bearer token if refresh fails
+  if (process.env.X_BEARER_TOKEN) {
+    return process.env.X_BEARER_TOKEN;
+  }
+
+  return null;
 }
 
 function getServerInfo() {
@@ -72,11 +139,11 @@ async function sendTweet(params: {
   reply_to_tweet_id?: string;
   quote_tweet_id?: string;
 }): Promise<{ content: Array<{ type: string; text: string }>; isError?: boolean }> {
-  const token = process.env.X_BEARER_TOKEN;
+  const token = await getValidToken();
 
   if (!token) {
     return {
-      content: [{ type: "text", text: "Error: X_BEARER_TOKEN environment variable is not set" }],
+      content: [{ type: "text", text: "Error: No valid access token. Set X_BEARER_TOKEN or configure X_CLIENT_ID, X_CLIENT_SECRET, and X_REFRESH_TOKEN for auto-refresh." }],
       isError: true,
     };
   }
