@@ -30,9 +30,15 @@ Add to your MCP client configuration:
 
 ### Getting a Bearer Token
 
+See the detailed step-by-step guide: **[English](./docs/token-guide.en.md)** | **[中文](./docs/token-guide.md)**
+
+Quick overview:
 1. Go to [X Developer Portal](https://developer.x.com/en/portal/dashboard)
 2. Create a project and app
-3. Generate a User Authentication Token with `tweet.read`, `tweet.write`, `users.read` scopes
+3. Configure User Authentication with `Read and write` permission
+4. Generate OAuth 2.0 Token with `tweet.read`, `tweet.write`, `users.read`, `offline.access` scopes
+
+**Recommended**: Use auto-refresh configuration with `X_CLIENT_ID`, `X_CLIENT_SECRET`, and `X_REFRESH_TOKEN` to avoid manual token refresh every 2 hours.
 
 ## Tool
 
